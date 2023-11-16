@@ -6,6 +6,7 @@ from reportlab.lib.units import inch, mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont, TTFError
 from reportlab.lib.colors import black, toColor, HexColor, gray
+from reportlab_qrcode import QRCodeImage
 
 import math
 import sys
@@ -22,7 +23,7 @@ def load_font(font_name: str) -> None:
 
 if "--roboto" in sys.argv:
     try:
-        load_font('Roboto-Bold.ttf')
+        load_font('Inter-Bold.ttf')
     except TTFError as e:
         print("Error: {}".format(e))
         exit(1)
@@ -102,6 +103,19 @@ AVERY_L7157 = PaperConfig(
     num_stickers_vertical=11,
 )
 
+AVERY_8045 = PaperConfig(
+    paper_name="Avery 80x45R",
+    pagesize=A4,
+    sticker_width=80 * mm,
+    sticker_height=45 * mm,
+    sticker_corner_radius=3 * mm,
+    left_margin=24 * mm,
+    top_margin=8.4 * mm,
+    horizontal_stride=82 * mm,
+    vertical_stride=47.2 * mm,
+    num_stickers_horizontal=2,
+    num_stickers_vertical=6,
+)
 
 EJ_RANGE_24 = PaperConfig(
     paper_name="EJRange 24",
@@ -487,7 +501,7 @@ def draw_resistor_sticker(
         # Squish horizontally by a bit, to prevent clipping
         rect.width -= 0.1*inch
         rect.left += 0.05*inch
-
+        
         # Draw middle line
         if draw_center_line:
             c.setStrokeColor(black, 0.25)
@@ -500,6 +514,10 @@ def draw_resistor_sticker(
         # Draw resistor value
         resistor_value = ResistorValue(ohms)
         print("Generating sticker '{}'".format(resistor_value.format_value()))
+        
+        # Draw QRCode
+        qr = QRCodeImage("R_"+ resistor_value.format_value(), size=15 * mm)
+        qr.drawOn(c, rect.left, rect.bottom + rect.height * 0.75 - 15 * mm / 2)
 
         value_font_size = 0.25 * inch
         ohm_font_size = 0.15 * inch
@@ -608,7 +626,7 @@ def main() -> None:
     # ############################################################################
     # Select the correct type of paper you want to print on.
     # ############################################################################
-    layout = AVERY_5260
+    layout = AVERY_8045
     # layout = AVERY_L7157
     # layout = EJ_RANGE_24
 
